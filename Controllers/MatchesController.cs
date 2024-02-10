@@ -20,23 +20,6 @@ namespace WADProject1.Controllers
             _userService = userService;
         }
 
-        // GET: api/Matches/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Match>> GetMatch(int id)
-        {
-            var match = await _context.Matches
-                .Include(m => m.Sender)
-                .Include(m => m.Receiver)
-                .FirstOrDefaultAsync(m => m.MatchId == id);
-
-            if (match == null)
-            {
-                return NotFound();
-            }
-
-            return match;
-        }
-
         // GET: api/Matches/userId - Retrieves matches where the user is either sender or receiver
         [HttpGet("{userId}")]
         public async Task<ActionResult<IEnumerable<Match>>> GetMatches(int userId)
