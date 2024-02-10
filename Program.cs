@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using WADProject1.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using WADProject1.Middleware;
+using WADProject1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,14 +15,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<TenderContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-var jwtSection = builder.Configuration.GetSection("Jwt");
-builder.Services.Configure<JwtSettings>(jwtSection);
+builder.Services.AddScoped<IUserService, UserService>();
 
 // JWT認証サービスを追加
+var jwtSection = builder.Configuration.GetSection("Jwt");
+builder.Services.Configure<JwtSettings>(jwtSection);
 var jwtSettings = jwtSection.Get<JwtSettings>();
 var key = Encoding.ASCII.GetBytes(jwtSettings.Key);
-
 
 builder.Services.AddAuthentication(x =>
 {
@@ -51,7 +52,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<UserResolverMiddleware>();
 
 app.MapControllers();
 
