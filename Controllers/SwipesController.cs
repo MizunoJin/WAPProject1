@@ -1,92 +1,73 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WADProject1.Models;
+using WADProject1.Services;
 
 namespace WADProject1.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class SwipesController : ControllerBase
     {
         private readonly TenderContext _context;
+         private readonly IUserService _userService;
 
-        public SwipesController(TenderContext context)
+        public SwipesController(TenderContext context, IUserService userService)
         {
             _context = context;
-        }
-
-        // GET: api/Swipes
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Swipe>>> GetSwipes()
-        {
-            return await _context.Swipes
-                .Include(s => s.Sender)
-                .Include(s => s.Receiver)
-                .ToListAsync();
+            _userService = userService;
         }
 
         // GET: api/Swipes/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Swipe>> GetSwipe(int id)
+        [HttpGet("{receiverId}")]
+        public async Task<ActionResult<IEnumerable<Swipe>>> GetSwipes(int receiverId)
         {
-            var swipe = await _context.Swipes
+            var swipes = await _context.Swipes
+                .AsNoTracking()
                 .Include(s => s.Sender)
                 .Include(s => s.Receiver)
-                .FirstOrDefaultAsync(s => s.SwipeId == id);
+                .Where(s => s.ReceiverId == receiverId)
+                .ToListAsync();
 
-            if (swipe == null)
-            {
-                return NotFound();
-            }
-
-            return swipe;
+            return Ok(swipes);
         }
 
-        // POST: api/Swipes
-        [HttpPost]
-        public async Task<ActionResult<Swipe>> PostSwipe(Swipe swipe)
+        // POST: api/Swipes/5
+        [HttpPost("{receiverId}")]
+        public async Task<ActionResult<Swipe>> PostSwipe(int receiverId)
         {
+            var senderId = _userService.CurrentUser.UserId;
+
+            // Check if the receiver exists
+            var receiverExists = await _context.Users.AnyAsync(u => u.UserId == receiverId);
+            if (!receiverExists)
+            {
+                return BadRequest("Receiver does not exist.");
+            }
+
+            var swipe = new Swipe
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId
+            };
+
             _context.Swipes.Add(swipe);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetSwipe), new { id = swipe.SwipeId }, swipe);
-        }
-
-        // PUT: api/Swipes/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutSwipe(int id, Swipe swipe)
-        {
-            if (id != swipe.SwipeId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(swipe).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SwipeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return CreatedAtAction(nameof(GetSwipes), new { receiverId = swipe.ReceiverId }, swipe);
         }
 
         // DELETE: api/Swipes/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSwipe(int id)
+        [HttpDelete("{senderId}")]
+        public async Task<IActionResult> DeleteSwipe(int senderId)
         {
-            var swipe = await _context.Swipes.FindAsync(id);
+            var receiverId = _userService.CurrentUser.UserId;
+
+            var swipe = await _context.Swipes
+                .FirstOrDefaultAsync(s => s.SenderId == senderId && s.ReceiverId == receiverId);
+
             if (swipe == null)
             {
                 return NotFound();
@@ -96,11 +77,6 @@ namespace WADProject1.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool SwipeExists(int id)
-        {
-            return _context.Swipes.Any(e => e.SwipeId == id);
         }
     }
 }
