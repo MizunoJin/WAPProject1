@@ -30,6 +30,29 @@ public class AuthController : ControllerBase
         return Ok(new { Token = token });
     }
 
+    // サインアップ（ユーザー登録）機能
+    [HttpPost("signup")]
+    public async Task<ActionResult<User>> SignUp([FromBody] LoginModel signUpModel)
+    {
+        if (await _context.Users.AnyAsync(u => u.Email == signUpModel.Email))
+        {
+            return BadRequest("Email is already in use.");
+        }
+
+        var newUser = new User
+        {
+            Email = signUpModel.Email,
+            Password = signUpModel.Password, // 実際のアプリではパスワードをハッシュ化するべき
+        };
+
+        _context.Users.Add(newUser);
+        await _context.SaveChangesAsync();
+
+        var token = GenerateJwtToken(newUser);
+
+        return CreatedAtAction(nameof(Login), new { id = newUser.UserId }, new { Token = token });
+    }
+
     private string GenerateJwtToken(User user)
     {
         var jwtSettings = _configuration.GetSection("Jwt").Get<JwtSettings>();
