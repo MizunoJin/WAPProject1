@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using WADProject1.Services;
 
 namespace WADProject1.Middleware
@@ -15,7 +15,7 @@ namespace WADProject1.Middleware
 
         public async Task InvokeAsync(HttpContext context, TenderContext dbContext)
         {
-            var userIdClaim = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var userIdClaim = context.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sid);
             if (userIdClaim != null)
             {
                 var userId = int.Parse(userIdClaim.Value);

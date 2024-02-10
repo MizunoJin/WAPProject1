@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +62,10 @@ public class AuthController : ControllerBase
         var expires = DateTime.Now.AddDays(1);
 
         var token = new JwtSecurityToken(
+            claims: new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sid, user.UserId.ToString()),
+            },
             issuer: jwtSettings.Issuer,
             audience: jwtSettings.Audience,
             expires: expires,
