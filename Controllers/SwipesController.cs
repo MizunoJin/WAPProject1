@@ -12,7 +12,7 @@ namespace WADProject1.Controllers
     public class SwipesController : ControllerBase
     {
         private readonly TenderContext _context;
-         private readonly IUserService _userService;
+        private readonly IUserService _userService;
 
         public SwipesController(TenderContext context, IUserService userService)
         {

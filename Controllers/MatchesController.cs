@@ -1,28 +1,23 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WADProject1.Models;
+using WADProject1.Services;
 
 namespace WADProject1.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class MatchesController : ControllerBase
     {
         private readonly TenderContext _context;
+        private readonly IUserService _userService;
 
-        public MatchesController(TenderContext context)
+        public MatchesController(TenderContext context, IUserService userService)
         {
             _context = context;
-        }
-
-        // GET: api/Matches
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Match>>> GetMatches()
-        {
-            return await _context.Matches
-                .Include(m => m.Sender)
-                .Include(m => m.Receiver)
-                .ToListAsync();
+            _userService = userService;
         }
 
         // GET: api/Matches/5
@@ -42,51 +37,54 @@ namespace WADProject1.Controllers
             return match;
         }
 
-        // POST: api/Matches
-        [HttpPost]
-        public async Task<ActionResult<Match>> PostMatch(Match match)
+        // GET: api/Matches/userId - Retrieves matches where the user is either sender or receiver
+        [HttpGet("{userId}")]
+        public async Task<ActionResult<IEnumerable<Match>>> GetMatches(int userId)
         {
+            var matches = await _context.Matches
+                .Include(m => m.Sender)
+                .Include(m => m.Receiver)
+                .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                .ToListAsync();
+
+            return matches;
+        }
+
+        // POST: api/Matches/receiverId - Creates a match with the logged-in user as the sender
+        [HttpPost("{receiverId}")]
+        public async Task<ActionResult<Match>> PostMatch(int receiverId)
+        {
+            var senderId = _userService.CurrentUser.UserId; // Assuming IUserService is correctly implemented to get the current user
+
+            // Ensure the receiver exists
+            var receiverExists = await _context.Users.AnyAsync(u => u.UserId == receiverId);
+            if (!receiverExists)
+            {
+                return BadRequest("Receiver does not exist.");
+            }
+
+            var match = new Match
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId
+            };
+
             _context.Matches.Add(match);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetMatch), new { id = match.MatchId }, match);
+            return CreatedAtAction("GetMatch", new { id = match.MatchId }, match);
         }
 
-        // PUT: api/Matches/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutMatch(int id, Match match)
+        // DELETE: api/Matches/userId - Deletes a match where the current user is involved as either sender or receiver
+        [HttpDelete("{userId}")]
+        public async Task<IActionResult> DeleteMatch(int userId)
         {
-            if (id != match.MatchId)
-            {
-                return BadRequest();
-            }
+            var currentUserId = _userService.CurrentUser.UserId; // Assuming IUserService is correctly implemented
 
-            _context.Entry(match).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MatchExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // DELETE: api/Matches/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMatch(int id)
-        {
-            var match = await _context.Matches.FindAsync(id);
+            // Find match where the current user is either sender or receiver
+            var match = await _context.Matches
+                .FirstOrDefaultAsync(m => (m.SenderId == currentUserId && m.ReceiverId == userId) || 
+                                          (m.ReceiverId == currentUserId && m.SenderId == userId));
             if (match == null)
             {
                 return NotFound();
@@ -96,11 +94,6 @@ namespace WADProject1.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool MatchExists(int id)
-        {
-            return _context.Matches.Any(e => e.MatchId == id);
         }
     }
 }
