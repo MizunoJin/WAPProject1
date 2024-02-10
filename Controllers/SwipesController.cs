@@ -38,19 +38,19 @@ namespace WADProject1.Controllers
         [HttpPost("{receiverId}")]
         public async Task<ActionResult<Swipe>> PostSwipe(int receiverId)
         {
-            var senderId = _userService.CurrentUser.UserId;
+            var sender = _userService.CurrentUser;
+            var receiver = await _context.Users.FindAsync(receiverId);
 
             // Check if the receiver exists
-            var receiverExists = await _context.Users.AnyAsync(u => u.UserId == receiverId);
-            if (!receiverExists)
+            if (receiver == null)
             {
                 return BadRequest("Receiver does not exist.");
             }
 
             var swipe = new Swipe
             {
-                SenderId = senderId,
-                ReceiverId = receiverId
+                SenderId = sender.UserId,
+                ReceiverId = receiverId,
             };
 
             _context.Swipes.Add(swipe);
