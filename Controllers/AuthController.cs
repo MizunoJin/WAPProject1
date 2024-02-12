@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WADProject1.Models;
+using WADProject1.Services;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -12,11 +14,13 @@ public class AuthController : ControllerBase
 {
     private readonly TenderContext _context;
     private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
 
-    public AuthController(TenderContext context, IConfiguration configuration)
+    public AuthController(TenderContext context, IConfiguration configuration, IEmailService emailService)
     {
         _context = context;
         _configuration = configuration;
+        _emailService = emailService;
     }
 
     [HttpPost("login")]
@@ -44,14 +48,35 @@ public class AuthController : ControllerBase
         {
             Email = signUpModel.Email,
             Password = signUpModel.Password, // 実際のアプリではパスワードをハッシュ化するべき
+            EmailConfirmationToken = Guid.NewGuid().ToString(),
+            EmailConfirmed = false
         };
 
         _context.Users.Add(newUser);
         await _context.SaveChangesAsync();
 
-        var token = GenerateJwtToken(newUser);
+        // 認証メールを送信
+        var callbackUrl = Url.Action("ConfirmEmail", "Auth", new { token = newUser.EmailConfirmationToken }, protocol: HttpContext.Request.Scheme);
+        await _emailService.SendEmailAsync(signUpModel.Email, "Confirm your email",
+            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-        return CreatedAtAction(nameof(Login), new { id = newUser.UserId }, new { Token = token });
+        return CreatedAtAction(nameof(Login), new { id = newUser.UserId }, new { newUser.Email });
+    }
+
+    [HttpGet("ConfirmEmail")]
+    public async Task<IActionResult> ConfirmEmail(string token)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.EmailConfirmationToken == token);
+        if (user == null)
+        {
+            return NotFound("A user with this token does not exist.");
+        }
+
+        user.EmailConfirmed = true;
+        _context.Update(user);
+        await _context.SaveChangesAsync();
+
+        return Ok("Email confirmed successfully.");
     }
 
     private string GenerateJwtToken(User user)
