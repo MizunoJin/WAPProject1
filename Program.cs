@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using WADProject1.Middleware;
 using WADProject1.Services;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +16,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<TenderContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<TenderContext>().AddDefaultTokenProviders();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<EmailService>();
 
 // JWT認証サービスを追加
 var jwtSection = builder.Configuration.GetSection("Jwt");

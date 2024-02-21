@@ -18,10 +18,10 @@ namespace WADProject1.Middleware
             var userIdClaim = context.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sid);
             if (userIdClaim != null)
             {
-                var userId = int.Parse(userIdClaim.Value);
+                var userId = userIdClaim.Value;
                 var user = await dbContext.Users
                     .Include(u => u.UserProfile)
-                    .FirstOrDefaultAsync(u => u.UserId == userId);
+                    .FirstOrDefaultAsync(u => u.Id == userId);
 
                 // Assuming you have a service or similar to hold the current user
                 // You might need to register this service in Startup.cs

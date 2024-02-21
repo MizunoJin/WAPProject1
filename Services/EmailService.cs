@@ -1,46 +1,33 @@
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+using Microsoft.Extensions.Options;
 
-using System.Net;
-using System.Net.Mail;
-
-namespace WADProject1.Services
+public class EmailService
 {
-    public interface IEmailService
+    private readonly EmailSettings _emailSettings;
+    public EmailService(IOptions<EmailSettings> emailSettings)
     {
-        Task SendEmailAsync(string to, string subject, string body);
+        _emailSettings = emailSettings.Value;
     }
-
-    public class EmailService : IEmailService
+    public void SendEmail(string toEmail, string subject, string body)
     {
-        private readonly IConfiguration _configuration;
-
-        public EmailService(IConfiguration configuration)
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress("Support CareApp", _emailSettings.SmtpUsername));
+        message.To.Add(new MailboxAddress("Reciever Name", toEmail));
+        message.Subject = subject;
+        var textPart = new TextPart("plain")
         {
-            _configuration = configuration;
-        }
-
-        public async Task SendEmailAsync(string to, string subject, string body)
+            Text = body
+        };
+        message.Body = textPart;
+        using (var client = new SmtpClient())
         {
-            var email = _configuration["EmailSettings:Email"];
-            var password = _configuration["EmailSettings:Password"];
-
-            var smtpClient = new SmtpClient
-            {
-                Host = _configuration["EmailSettings:Host"],
-                Port = int.Parse(_configuration["EmailSettings:Port"]),
-                EnableSsl = true,
-                Credentials = new NetworkCredential(email, password)
-            };
-
-            var message = new MailMessage
-            {
-                From = new MailAddress(email),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
-            message.To.Add(to);
-
-            await smtpClient.SendMailAsync(message);
+            client.Connect(_emailSettings.SmtpServer, _emailSettings.SmtpPort,
+           SecureSocketOptions.StartTls);
+            client.Authenticate(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
+            client.Send(message);
+            client.Disconnect(true);
         }
     }
 }

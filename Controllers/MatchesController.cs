@@ -22,7 +22,7 @@ namespace WADProject1.Controllers
 
         // GET: api/Matches/userId - Retrieves matches where the user is either sender or receiver
         [HttpGet("{userId}")]
-        public async Task<ActionResult<IEnumerable<Match>>> GetMatches(int userId)
+        public async Task<ActionResult<IEnumerable<Match>>> GetMatches(string userId)
         {
             var matches = await _context.Matches
                 .Include(m => m.Sender)
@@ -35,12 +35,12 @@ namespace WADProject1.Controllers
 
         // POST: api/Matches/receiverId - Creates a match with the logged-in user as the sender
         [HttpPost("{receiverId}")]
-        public async Task<ActionResult<Match>> PostMatch(int receiverId)
+        public async Task<ActionResult<Match>> PostMatch(string receiverId)
         {
-            var senderId = _userService.CurrentUser.UserId; // Assuming IUserService is correctly implemented to get the current user
+            var senderId = _userService.CurrentUser.Id; // Assuming IUserService is correctly implemented to get the current user
 
             // Ensure the receiver exists
-            var receiverExists = await _context.Users.AnyAsync(u => u.UserId == receiverId);
+            var receiverExists = await _context.Users.AnyAsync(u => u.Id == receiverId);
             if (!receiverExists)
             {
                 return BadRequest("Receiver does not exist.");
@@ -60,9 +60,9 @@ namespace WADProject1.Controllers
 
         // DELETE: api/Matches/userId - Deletes a match where the current user is involved as either sender or receiver
         [HttpDelete("{userId}")]
-        public async Task<IActionResult> DeleteMatch(int userId)
+        public async Task<IActionResult> DeleteMatch(string userId)
         {
-            var currentUserId = _userService.CurrentUser.UserId; // Assuming IUserService is correctly implemented
+            var currentUserId = _userService.CurrentUser.Id; // Assuming IUserService is correctly implemented
 
             // Find match where the current user is either sender or receiver
             var match = await _context.Matches

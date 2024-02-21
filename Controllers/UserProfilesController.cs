@@ -30,7 +30,7 @@ namespace WADProject1.Controllers
                 return BadRequest("User not found.");
             }
 
-            var currentUserId = _userService.CurrentUser.UserId;
+            var currentUserId = _userService.CurrentUser.Id;
 
             var userProfile = await _context.UserProfiles
                 .FirstOrDefaultAsync(up => up.UserId == currentUserId);
@@ -53,7 +53,7 @@ namespace WADProject1.Controllers
                 return BadRequest("User not found.");
             }
 
-            var currentUserId = currentUser.UserId;
+            var currentUserId = currentUser.Id;
 
             if (userProfile.UserId != currentUserId)
             {
@@ -89,7 +89,7 @@ namespace WADProject1.Controllers
                 return BadRequest("User not found.");
             }
 
-            var currentUserId = _userService.CurrentUser.UserId;
+            var currentUserId = _userService.CurrentUser.Id;
 
             // Prevent users from creating multiple profiles or profiles for other users
             if (userProfile.UserId != currentUserId || UserProfileExistsForUser(currentUserId))
@@ -108,7 +108,7 @@ namespace WADProject1.Controllers
             return _context.UserProfiles.Any(e => e.UserProfileId == id);
         }
 
-        private bool UserProfileExistsForUser(int userId)
+        private bool UserProfileExistsForUser(string userId)
         {
             return _context.UserProfiles.Any(e => e.UserId == userId);
         }
