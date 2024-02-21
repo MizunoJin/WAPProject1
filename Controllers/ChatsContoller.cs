@@ -22,9 +22,9 @@ namespace WADProject1.Controllers
 
         // GET: api/Chats/userId - Retrieves chats where the user is either sender or receiver
         [HttpGet("{userId}")]
-        public async Task<ActionResult<IEnumerable<Chat>>> GetChats(int userId)
+        public async Task<ActionResult<IEnumerable<Chat>>> GetChats(string userId)
         {
-            var currentUserId = _userService.CurrentUser.UserId; // Assuming IUserService is implemented
+            var currentUserId = _userService.CurrentUser.Id; // Assuming IUserService is implemented
 
             var chats = await _context.Chats
                 .Include(c => c.Sender)
@@ -38,9 +38,9 @@ namespace WADProject1.Controllers
 
         // POST: api/Chats/receiverId - Creates a chat message with the logged-in user as the sender
         [HttpPost("{receiverId}")]
-        public async Task<ActionResult<Chat>> PostChat(int receiverId, Chat chat)
+        public async Task<ActionResult<Chat>> PostChat(string receiverId, Chat chat)
         {
-            var senderId = _userService.CurrentUser.UserId; // Assuming IUserService is implemented
+            var senderId = _userService.CurrentUser.Id; // Assuming IUserService is implemented
 
             // Prevent from setting different senderId in the body
             if (chat.SenderId != senderId)
@@ -61,7 +61,7 @@ namespace WADProject1.Controllers
         [HttpDelete("{chatId}")]
         public async Task<IActionResult> DeleteChat(int chatId)
         {
-            var currentUserId = _userService.CurrentUser.UserId; // Assuming IUserService is implemented
+            var currentUserId = _userService.CurrentUser.Id; // Assuming IUserService is implemented
 
             var chat = await _context.Chats
                 .FirstOrDefaultAsync(c => c.ChatId == chatId && 

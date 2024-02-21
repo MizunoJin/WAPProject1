@@ -22,7 +22,7 @@ namespace WADProject1.Controllers
 
         // GET: api/Swipes/5
         [HttpGet("{receiverId}")]
-        public async Task<ActionResult<IEnumerable<Swipe>>> GetSwipes(int receiverId)
+        public async Task<ActionResult<IEnumerable<Swipe>>> GetSwipes(string receiverId)
         {
             var swipes = await _context.Swipes
                 .AsNoTracking()
@@ -36,7 +36,7 @@ namespace WADProject1.Controllers
 
         // POST: api/Swipes/5
         [HttpPost("{receiverId}")]
-        public async Task<ActionResult<Swipe>> PostSwipe(int receiverId)
+        public async Task<ActionResult<Swipe>> PostSwipe(string receiverId)
         {
             var sender = _userService.CurrentUser;
             var receiver = await _context.Users.FindAsync(receiverId);
@@ -49,7 +49,7 @@ namespace WADProject1.Controllers
 
             var swipe = new Swipe
             {
-                SenderId = sender.UserId,
+                SenderId = sender.Id,
                 ReceiverId = receiverId,
             };
 
@@ -61,9 +61,9 @@ namespace WADProject1.Controllers
 
         // DELETE: api/Swipes/5
         [HttpDelete("{senderId}")]
-        public async Task<IActionResult> DeleteSwipe(int senderId)
+        public async Task<IActionResult> DeleteSwipe(string senderId)
         {
-            var receiverId = _userService.CurrentUser.UserId;
+            var receiverId = _userService.CurrentUser.Id;
 
             var swipe = await _context.Swipes
                 .FirstOrDefaultAsync(s => s.SenderId == senderId && s.ReceiverId == receiverId);
