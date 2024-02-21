@@ -59,6 +59,12 @@ public class TenderContext : IdentityDbContext<IdentityUser>
             .HasForeignKey(cu => cu.ReceiverId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
+        modelBuilder.Entity<User>()
+            .HasOne(e => e.UserProfile)
+            .WithOne(e => e.User)
+            .HasForeignKey<UserProfile>(e => e.UserId)
+            .IsRequired();
+
         base.OnModelCreating(modelBuilder);
     }
 }
