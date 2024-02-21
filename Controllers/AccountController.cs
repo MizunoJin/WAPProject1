@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using WADProject1.Models;
 
 namespace IdentityPractice.Controllers
 {
@@ -7,11 +8,11 @@ namespace IdentityPractice.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly EmailService _emailService;
-        public AccountController(UserManager<IdentityUser> userManager,
-       SignInManager<IdentityUser> signInManager, EmailService emailService)
+        public AccountController(UserManager<User> userManager,
+       SignInManager<User> signInManager, EmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -20,7 +21,7 @@ namespace IdentityPractice.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(AuthModel model)
         {
-            var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+            var user = new User { UserName = model.Email, Email = model.Email };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {

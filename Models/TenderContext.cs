@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WADProject1.Models;
 
-public class TenderContext : IdentityDbContext<IdentityUser>
+public class TenderContext : IdentityDbContext<User>
 {
     public TenderContext(DbContextOptions<TenderContext> options)
         : base(options)

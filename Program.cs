@@ -16,7 +16,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<TenderContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<TenderContext>().AddDefaultTokenProviders();
+builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<TenderContext>().AddDefaultTokenProviders();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<EmailService>();
