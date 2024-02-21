@@ -1,5 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using WADProject1.Models;
 
 namespace IdentityPractice.Controllers
@@ -11,12 +15,15 @@ namespace IdentityPractice.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly EmailService _emailService;
+        private readonly IConfiguration _configuration;
+
         public AccountController(UserManager<User> userManager,
-       SignInManager<User> signInManager, EmailService emailService)
+       SignInManager<User> signInManager, EmailService emailService, IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailService = emailService;
+            _configuration = configuration;
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register(AuthModel model)
@@ -66,9 +73,31 @@ namespace IdentityPractice.Controllers
            isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
-                return Ok("Login successful.");
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                var token = GenerateJwtToken(user);
+                return Ok(new { Token = token });
             }
             return Unauthorized("Invalid login attempt.");
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var jwtSettings = _configuration.GetSection("Jwt").Get<JwtSettings>();
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var expires = DateTime.Now.AddDays(1);
+
+            var token = new JwtSecurityToken(
+                claims: new[]
+                {
+                new Claim(JwtRegisteredClaimNames.Sid, user.Id.ToString()),
+                },
+                issuer: jwtSettings.Issuer,
+                audience: jwtSettings.Audience,
+                expires: expires,
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
