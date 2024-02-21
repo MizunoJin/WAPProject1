@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WADProject1.Models;
 
-public class TenderContext : DbContext
+public class TenderContext : IdentityDbContext<IdentityUser>
 {
     public TenderContext(DbContextOptions<TenderContext> options)
         : base(options)
@@ -56,5 +58,7 @@ public class TenderContext : DbContext
             .WithMany(e => e.ReceivedSwipes)
             .HasForeignKey(cu => cu.ReceiverId)
             .OnDelete(DeleteBehavior.ClientCascade);
+
+        base.OnModelCreating(modelBuilder);
     }
 }
