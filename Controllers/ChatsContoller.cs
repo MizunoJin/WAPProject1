@@ -13,42 +13,44 @@ namespace WADProject1.Controllers
     {
         private readonly TenderContext _context;
         private readonly IUserService _userService;
+        private readonly ILogger<ChatsController> _logger;
 
-        public ChatsController(TenderContext context, IUserService userService)
+        public ChatsController(TenderContext context, IUserService userService, ILogger<ChatsController> logger)
         {
             _context = context;
             _userService = userService;
+            _logger = logger;
         }
 
-        // GET: api/Chats/userId - Retrieves chats where the user is either sender or receiver
         [HttpGet("{userId}")]
         public async Task<ActionResult<IEnumerable<Chat>>> GetChats(string userId)
         {
+            _logger.LogInformation("Retrieving chats for user ID {UserId}", userId);
+
             var currentUserId = _userService.CurrentUser.Id; // Assuming IUserService is implemented
 
             var chats = await _context.Chats
                 .Include(c => c.Sender)
                 .Include(c => c.Receiver)
-                .Where(c => (c.SenderId == currentUserId && c.ReceiverId == userId) || 
+                .Where(c => (c.SenderId == currentUserId && c.ReceiverId == userId) ||
                             (c.ReceiverId == currentUserId && c.SenderId == userId))
                 .ToListAsync();
 
             return chats;
         }
 
-        // POST: api/Chats/receiverId - Creates a chat message with the logged-in user as the sender
         [HttpPost("{receiverId}")]
         public async Task<ActionResult<Chat>> PostChat(string receiverId, Chat chat)
         {
-            var senderId = _userService.CurrentUser.Id; // Assuming IUserService is implemented
+            _logger.LogInformation("Creating a chat message from {SenderId} to {ReceiverId}", _userService.CurrentUser.Id, receiverId);
 
-            // Prevent from setting different senderId in the body
-            if (chat.SenderId != senderId)
+            if (chat.SenderId != _userService.CurrentUser.Id)
             {
+                _logger.LogWarning("Sender ID mismatch: {SenderId} attempted to send as {ChatSenderId}", _userService.CurrentUser.Id, chat.SenderId);
                 return BadRequest("You can only send messages as yourself.");
             }
 
-            chat.SenderId = senderId; // Ensure the senderId is the current user
+            chat.SenderId = _userService.CurrentUser.Id;
             chat.ReceiverId = receiverId;
 
             _context.Chats.Add(chat);
@@ -57,17 +59,19 @@ namespace WADProject1.Controllers
             return CreatedAtAction("GetChats", new { userId = receiverId }, chat);
         }
 
-        // DELETE: api/Chats/userId - Deletes a chat message involving the current user and the specified userId
         [HttpDelete("{chatId}")]
         public async Task<IActionResult> DeleteChat(int chatId)
         {
-            var currentUserId = _userService.CurrentUser.Id; // Assuming IUserService is implemented
+            _logger.LogInformation("Deleting chat message with ID {ChatId}", chatId);
+
+            var currentUserId = _userService.CurrentUser.Id;
 
             var chat = await _context.Chats
-                .FirstOrDefaultAsync(c => c.ChatId == chatId && 
+                .FirstOrDefaultAsync(c => c.ChatId == chatId &&
                                           (c.SenderId == currentUserId || c.ReceiverId == currentUserId));
             if (chat == null)
             {
+                _logger.LogWarning("Chat message not found for deletion: {ChatId}", chatId);
                 return NotFound();
             }
 
