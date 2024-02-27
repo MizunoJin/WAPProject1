@@ -29,11 +29,6 @@ namespace WADProject1.Controllers
             _logger.LogInformation("Getting user profile");
 
             var currentUser = _userService.CurrentUser;
-            if (currentUser == null)
-            {
-                _logger.LogWarning("User not found");
-                return BadRequest("User not found.");
-            }
 
             var currentUserId = _userService.CurrentUser.Id;
 
@@ -56,11 +51,6 @@ namespace WADProject1.Controllers
             _logger.LogInformation("Updating user profile for user ID {UserId}", userProfile.UserId);
 
             var currentUser = _userService.CurrentUser;
-            if (currentUser == null)
-            {
-                _logger.LogWarning("User not found during profile update");
-                return BadRequest("User not found.");
-            }
 
             if (userProfile.UserId != currentUser.Id)
             {
@@ -96,11 +86,6 @@ namespace WADProject1.Controllers
             _logger.LogInformation("Creating a new user profile");
 
             var currentUser = _userService.CurrentUser;
-            if (currentUser == null)
-            {
-                _logger.LogWarning("User not found during profile creation");
-                return BadRequest("User not found.");
-            }
 
             if (userProfile.UserId != currentUser.Id || UserProfileExistsForUser(currentUser.Id))
             {

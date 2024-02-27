@@ -1,53 +1,59 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WADProject1.Models;
 
-[ApiController]
-[Route("api/[controller]")]
-public class UsersController : ControllerBase
+namespace WADProject1.Controllers
 {
-    private readonly TenderContext _context;
-    private readonly ILogger<UsersController> _logger;
-
-    public UsersController(TenderContext context, ILogger<UsersController> logger)
+    [Authorize(Roles = "Admin")]
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UsersController : ControllerBase
     {
-        _context = context;
-        _logger = logger;
-    }
+        private readonly TenderContext _context;
+        private readonly ILogger<UsersController> _logger;
 
-    // GET: api/Users/5
-    [HttpGet("{id}")]
-    public async Task<ActionResult<User>> GetUser(int id)
-    {
-        _logger.LogInformation("Getting user with ID: {UserID}", id);
-        var user = await _context.Users.FindAsync(id);
-
-        if (user == null)
+        public UsersController(TenderContext context, ILogger<UsersController> logger)
         {
-            _logger.LogWarning("GetUser({UserID}) NOT FOUND", id);
-            return NotFound();
+            _context = context;
+            _logger = logger;
         }
 
-        return user;
-    }
-
-    // DELETE: api/Users/5
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteUser(int id)
-    {
-        _logger.LogInformation("Deleting user with ID: {UserID}", id); 
-        var user = await _context.Users.FindAsync(id);
-        if (user == null)
+        // GET: api/Users/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<User>> GetUser(int id)
         {
-            _logger.LogWarning("DeleteUser({UserID}) NOT FOUND", id);
-            return NotFound();
+            _logger.LogInformation("Getting user with ID: {UserID}", id);
+
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+            {
+                _logger.LogWarning("GetUser({UserID}) NOT FOUND", id);
+                return NotFound();
+            }
+
+            return user;
         }
 
-        _context.Users.Remove(user);
-        await _context.SaveChangesAsync();
+        // DELETE: api/Users/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            _logger.LogInformation("Deleting user with ID: {UserID}", id);
 
-        _logger.LogInformation("User with ID: {UserID} deleted successfully", id);
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                _logger.LogWarning("DeleteUser({UserID}) NOT FOUND", id);
+                return NotFound();
+            }
 
-        return NoContent();
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("User with ID: {UserID} deleted successfully", id);
+
+            return NoContent();
+        }
     }
 }
-
