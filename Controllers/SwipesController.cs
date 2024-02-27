@@ -13,17 +13,21 @@ namespace WADProject1.Controllers
     {
         private readonly TenderContext _context;
         private readonly IUserService _userService;
+        private readonly ILogger<SwipesController> _logger;
 
-        public SwipesController(TenderContext context, IUserService userService)
+        public SwipesController(TenderContext context, IUserService userService, ILogger<SwipesController> logger)
         {
             _context = context;
             _userService = userService;
+            _logger = logger;
         }
 
         // GET: api/Swipes/5
         [HttpGet("{receiverId}")]
         public async Task<ActionResult<IEnumerable<Swipe>>> GetSwipes(string receiverId)
         {
+            _logger.LogInformation("Fetching swipes for receiver ID {ReceiverId}", receiverId);
+
             var swipes = await _context.Swipes
                 .AsNoTracking()
                 .Include(s => s.Sender)
@@ -38,18 +42,18 @@ namespace WADProject1.Controllers
         [HttpPost("{receiverId}")]
         public async Task<ActionResult<Swipe>> PostSwipe(string receiverId)
         {
-            var sender = _userService.CurrentUser;
-            var receiver = await _context.Users.FindAsync(receiverId);
+            _logger.LogInformation("Attempting to create a swipe from {SenderId} to {ReceiverId}", _userService.CurrentUser.Id, receiverId);
 
-            // Check if the receiver exists
+            var receiver = await _context.Users.FindAsync(receiverId);
             if (receiver == null)
             {
+                _logger.LogWarning("Attempted to swipe non-existent receiver ID {ReceiverId}", receiverId);
                 return BadRequest("Receiver does not exist.");
             }
 
             var swipe = new Swipe
             {
-                SenderId = sender.Id,
+                SenderId = _userService.CurrentUser.Id,
                 ReceiverId = receiverId,
             };
 
@@ -63,13 +67,14 @@ namespace WADProject1.Controllers
         [HttpDelete("{senderId}")]
         public async Task<IActionResult> DeleteSwipe(string senderId)
         {
-            var receiverId = _userService.CurrentUser.Id;
+            _logger.LogInformation("Deleting swipe from {SenderId} to current user {ReceiverId}", senderId, _userService.CurrentUser.Id);
 
             var swipe = await _context.Swipes
-                .FirstOrDefaultAsync(s => s.SenderId == senderId && s.ReceiverId == receiverId);
+                .FirstOrDefaultAsync(s => s.SenderId == senderId && s.ReceiverId == _userService.CurrentUser.Id);
 
             if (swipe == null)
             {
+                _logger.LogWarning("Swipe not found for deletion between {SenderId} and {ReceiverId}", senderId, _userService.CurrentUser.Id);
                 return NotFound();
             }
 

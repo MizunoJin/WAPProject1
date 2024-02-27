@@ -13,20 +13,25 @@ namespace WADProject1.Controllers
     {
         private readonly TenderContext _context;
         private readonly IUserService _userService;
+        private readonly ILogger<UserProfilesController> _logger;
 
-        public UserProfilesController(TenderContext context, IUserService userService)
+        public UserProfilesController(TenderContext context, IUserService userService, ILogger<UserProfilesController> logger)
         {
             _context = context;
             _userService = userService;
+            _logger = logger;
         }
 
         // GET: api/UserProfiles
         [HttpGet]
         public async Task<ActionResult<UserProfile>> GetUserProfile()
         {
+            _logger.LogInformation("Getting user profile");
+
             var currentUser = _userService.CurrentUser;
             if (currentUser == null)
             {
+                _logger.LogWarning("User not found");
                 return BadRequest("User not found.");
             }
 
@@ -37,6 +42,7 @@ namespace WADProject1.Controllers
 
             if (userProfile == null)
             {
+                _logger.LogWarning("User profile not found for user ID {UserId}", currentUserId);
                 return NotFound();
             }
 
@@ -47,21 +53,24 @@ namespace WADProject1.Controllers
         [HttpPut]
         public async Task<IActionResult> PutUserProfile(UserProfile userProfile)
         {
+            _logger.LogInformation("Updating user profile for user ID {UserId}", userProfile.UserId);
+
             var currentUser = _userService.CurrentUser;
             if (currentUser == null)
             {
+                _logger.LogWarning("User not found during profile update");
                 return BadRequest("User not found.");
             }
 
-            var currentUserId = currentUser.Id;
-
-            if (userProfile.UserId != currentUserId)
+            if (userProfile.UserId != currentUser.Id)
             {
+                _logger.LogWarning("Attempt to update profile for a different user");
                 return BadRequest("You can only update your own profile.");
             }
 
             if (!UserProfileExists(userProfile.UserProfileId))
             {
+                _logger.LogWarning("User profile {UserProfileId} not found", userProfile.UserProfileId);
                 return NotFound();
             }
 
@@ -71,8 +80,9 @@ namespace WADProject1.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
+                _logger.LogError(ex, "An error occurred while updating the user profile");
                 throw;
             }
 
@@ -83,17 +93,18 @@ namespace WADProject1.Controllers
         [HttpPost]
         public async Task<ActionResult<UserProfile>> PostUserProfile(UserProfile userProfile)
         {
+            _logger.LogInformation("Creating a new user profile");
+
             var currentUser = _userService.CurrentUser;
             if (currentUser == null)
             {
+                _logger.LogWarning("User not found during profile creation");
                 return BadRequest("User not found.");
             }
 
-            var currentUserId = _userService.CurrentUser.Id;
-
-            // Prevent users from creating multiple profiles or profiles for other users
-            if (userProfile.UserId != currentUserId || UserProfileExistsForUser(currentUserId))
+            if (userProfile.UserId != currentUser.Id || UserProfileExistsForUser(currentUser.Id))
             {
+                _logger.LogWarning("Attempt to create multiple profiles or profiles for other users");
                 return BadRequest("You can only create your own profile.");
             }
 

@@ -16,15 +16,19 @@ namespace IdentityPractice.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly EmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(UserManager<User> userManager,
-       SignInManager<User> signInManager, EmailService emailService, IConfiguration configuration)
+            SignInManager<User> signInManager, EmailService emailService, IConfiguration configuration,
+            ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailService = emailService;
             _configuration = configuration;
+            _logger = logger;
         }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register(AuthModel model)
         {
@@ -32,28 +36,28 @@ namespace IdentityPractice.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                // Generate an email verification token
+                _logger.LogInformation("User {Email} registered successfully", model.Email);
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                // Create the verification link
                 var verificationLink = Url.Action("VerifyEmail", "Account", new
                 {
                     userId = user.Id,
-                    token =
-               token
+                    token
                 }, Request.Scheme);
-                // Send the verification email
                 var emailSubject = "Email Verification";
                 var emailBody = $"Please verify your email by clicking the following link: {verificationLink}";
                 _emailService.SendEmail(user.Email, emailSubject, emailBody);
 
                 return Ok("User registered successfully. An email verification link has been sent.");
             }
+            _logger.LogWarning("User registration failed for {Email}. Errors: {Errors}", model.Email, result.Errors);
             return BadRequest(result.Errors);
         }
+
         // Add an action to handle email verification
         [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail(string userId, string token)
         {
+            _logger.LogInformation("Email verification attempt for user ID {UserId}", userId);
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
@@ -69,6 +73,7 @@ namespace IdentityPractice.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(AuthModel model)
         {
+            _logger.LogInformation("Login attempt for {Email}", model.Email);
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password,
            isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
@@ -82,6 +87,7 @@ namespace IdentityPractice.Controllers
 
         private string GenerateJwtToken(User user)
         {
+            _logger.LogInformation("Generating JWT token for user ID {UserId}", user.Id);
             var jwtSettings = _configuration.GetSection("Jwt").Get<JwtSettings>();
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
