@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using WADProject1.Middleware;
 using WADProject1.Services;
 using Microsoft.AspNetCore.Identity;
+using WADProject1.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,5 +67,19 @@ app.UseAuthorization();
 app.UseMiddleware<UserResolverMiddleware>();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        SeedDatabase.Initialize(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred seeding the DB.");
+    }
+}
 
 app.Run();
