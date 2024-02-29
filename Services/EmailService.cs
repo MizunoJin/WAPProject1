@@ -13,7 +13,7 @@ public class EmailService
     public void SendEmail(string toEmail, string subject, string body)
     {
         var message = new MimeMessage();
-        message.From.Add(new MailboxAddress("Support CareApp", _emailSettings.SmtpUsername));
+        message.From.Add(new MailboxAddress("Support CareApp", _emailSettings.SMTP_USERNAME));
         message.To.Add(new MailboxAddress("Reciever Name", toEmail));
         message.Subject = subject;
         var textPart = new TextPart("plain")
@@ -25,7 +25,7 @@ public class EmailService
         {
             client.Connect(_emailSettings.SmtpServer, _emailSettings.SmtpPort,
            SecureSocketOptions.StartTls);
-            client.Authenticate(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
+            client.Authenticate(_emailSettings.SMTP_USERNAME, _emailSettings.SMTP_PASSWORD);
             client.Send(message);
             client.Disconnect(true);
         }

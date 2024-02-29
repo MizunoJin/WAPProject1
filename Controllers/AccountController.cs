@@ -89,7 +89,7 @@ namespace IdentityPractice.Controllers
         {
             _logger.LogInformation("Generating JWT token for user ID {UserId}", user.Id);
             var jwtSettings = _configuration.GetSection("Jwt").Get<JwtSettings>();
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.JWT_KEY));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.Now.AddDays(1);
 
