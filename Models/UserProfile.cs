@@ -7,6 +7,6 @@ namespace WADProject1.Models
         public required string Detail { get; set; }
         public required string SexualOrientation { get; set; }
         public required string UserId { get; set; }
-        public required User User { get; set; }
+        public User User { get; set; }
     }
 }
