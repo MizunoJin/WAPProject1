@@ -27,6 +27,10 @@ To get started with Tender, follow these steps:
 
 Contributions to Tender are welcome! Please refer to the contributing guidelines before making a pull request.
 
+## ERD
+
+![ERD](./Tender.png)
+
 ## License
 
 Tender is released under the [MIT License](LICENSE).
