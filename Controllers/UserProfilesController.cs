@@ -58,13 +58,14 @@ namespace WADProject1.Controllers
                 return BadRequest("You can only update your own profile.");
             }
 
-            if (!UserProfileExists(userProfile.UserProfileId))
+            var existingProfile = await _context.UserProfiles.FindAsync(userProfile.UserProfileId);
+            if (existingProfile == null)
             {
                 _logger.LogWarning("User profile {UserProfileId} not found", userProfile.UserProfileId);
                 return NotFound();
             }
 
-            _context.Entry(userProfile).State = EntityState.Modified;
+            _context.Entry(existingProfile).CurrentValues.SetValues(userProfile);
 
             try
             {
@@ -97,11 +98,6 @@ namespace WADProject1.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetUserProfile", new { id = userProfile.UserProfileId }, userProfile);
-        }
-
-        private bool UserProfileExists(int id)
-        {
-            return _context.UserProfiles.Any(e => e.UserProfileId == id);
         }
 
         private bool UserProfileExistsForUser(string userId)
