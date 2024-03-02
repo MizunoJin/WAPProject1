@@ -60,7 +60,7 @@ namespace WADProject1.Controllers
             _context.Matches.Add(match);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetMatch", new { id = match.MatchId }, match);
+            return CreatedAtAction(nameof(GetMatches), new { id = match.MatchId }, match);
         }
 
         // DELETE: api/Matches/userId
