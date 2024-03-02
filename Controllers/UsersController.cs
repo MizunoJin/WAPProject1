@@ -20,7 +20,7 @@ namespace WADProject1.Controllers
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<User>> GetUser(string id)
         {
             _logger.LogInformation("Getting user with ID: {UserID}", id);
 
@@ -37,7 +37,7 @@ namespace WADProject1.Controllers
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
             _logger.LogInformation("Deleting user with ID: {UserID}", id);
 

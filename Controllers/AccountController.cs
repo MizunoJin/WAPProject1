@@ -79,25 +79,34 @@ namespace IdentityPractice.Controllers
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                var token = GenerateJwtToken(user);
+                var roles = await _userManager.GetRolesAsync(user);
+                var token = GenerateJwtToken(user, roles);
                 return Ok(new { Token = token });
             }
             return Unauthorized("Invalid login attempt.");
         }
 
-        private string GenerateJwtToken(User user)
+        private string GenerateJwtToken(User user, IList<string> roles)
         {
             _logger.LogInformation("Generating JWT token for user ID {UserId}", user.Id);
             var jwtSettings = _configuration.GetSection("Jwt").Get<JwtSettings>();
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT_KEY"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.Now.AddDays(1);
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sid, user.Id.ToString()),
+            };
+
+            // Add roles as claims
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var token = new JwtSecurityToken(
-                claims: new[]
-                {
-                new Claim(JwtRegisteredClaimNames.Sid, user.Id.ToString()),
-                },
+                claims: claims,
                 issuer: jwtSettings.Issuer,
                 audience: jwtSettings.Audience,
                 expires: expires,
