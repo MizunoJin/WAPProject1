@@ -22,17 +22,18 @@ namespace WADProject1.Controllers
             _logger = logger;
         }
 
-        // GET: api/Swipes/5
-        [HttpGet("{receiverId}")]
-        public async Task<ActionResult<IEnumerable<Swipe>>> GetSwipes(string receiverId)
+        // GET: api/Swipes
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Swipe>>> GetSwipes()
         {
-            _logger.LogInformation("Fetching swipes for receiver ID {ReceiverId}", receiverId);
+            var currentUserId = _userService.CurrentUser.Id;
+            _logger.LogInformation("Fetching swipes for current user {UserId}", currentUserId);
 
             var swipes = await _context.Swipes
                 .AsNoTracking()
                 .Include(s => s.Sender)
                 .Include(s => s.Receiver)
-                .Where(s => s.ReceiverId == receiverId)
+                .Where(s => s.ReceiverId == currentUserId)
                 .ToListAsync();
 
             return Ok(swipes);
