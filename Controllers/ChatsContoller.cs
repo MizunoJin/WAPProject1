@@ -60,12 +60,6 @@ namespace WADProject1.Controllers
         {
             _logger.LogInformation("Creating a chat message from {SenderId} to {ReceiverId}", _userService.CurrentUser.Id, receiverId);
 
-            if (chat.SenderId != _userService.CurrentUser.Id)
-            {
-                _logger.LogWarning("Sender ID mismatch: {SenderId} attempted to send as {ChatSenderId}", _userService.CurrentUser.Id, chat.SenderId);
-                return BadRequest("You can only send messages as yourself.");
-            }
-
             chat.SenderId = _userService.CurrentUser.Id;
             chat.ReceiverId = receiverId;
 
