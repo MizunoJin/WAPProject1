@@ -22,12 +22,28 @@ namespace WADProject1.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Chat>>> GetChats()
+        {
+            _logger.LogInformation("Retrieving all chats");
+
+            var currentUserId = _userService.CurrentUser.Id;
+
+            var chats = await _context.Chats
+                .Include(c => c.Sender)
+                .Include(c => c.Receiver)
+                .Where(c => c.SenderId == currentUserId || c.ReceiverId == currentUserId)
+                .ToListAsync();
+
+            return chats;
+        }
+
         [HttpGet("{userId}")]
         public async Task<ActionResult<IEnumerable<Chat>>> GetChats(string userId)
         {
             _logger.LogInformation("Retrieving chats for user ID {UserId}", userId);
 
-            var currentUserId = _userService.CurrentUser.Id; // Assuming IUserService is implemented
+            var currentUserId = _userService.CurrentUser.Id;
 
             var chats = await _context.Chats
                 .Include(c => c.Sender)
