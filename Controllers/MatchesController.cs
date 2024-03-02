@@ -22,10 +22,11 @@ namespace WADProject1.Controllers
             _logger = logger;
         }
 
-        // GET: api/Matches/userId
-        [HttpGet("{userId}")]
-        public async Task<ActionResult<IEnumerable<Match>>> GetMatches(string userId)
+        // GET: api/Matches
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Match>>> GetMatches()
         {
+            var userId = _userService.CurrentUser.Id;
             _logger.LogInformation("Retrieving matches for user ID {UserId}", userId);
 
             var matches = await _context.Matches
