@@ -2,6 +2,10 @@
 
 Tender is the backend server for a dating application designed to connect individuals in a modern, efficient, and secure manner.
 
+## URL
+
+https://tenderwad.azurewebsites.net
+
 ## Features
 
 - **User Registration**: Users can sign up by providing their email and password.
@@ -23,18 +27,14 @@ To get started with Tender, follow these steps:
 4. Set up your environment variables, including those needed for email services and JWT authentication.
 5. Run the application.
 
-## Contributing
+## Technology
 
-Contributions to Tender are welcome! Please refer to the contributing guidelines before making a pull request.
+- APP: ASP.NET Core 7.0
+- DB: SQL Server
+- Cloud Platform: Microsoft Azure
+- Version Control: Git/GitHub/GitHub Action
+- Email Server: Gmail
 
 ## ERD
 
 ![ERD](./Tender.png)
-
-## License
-
-Tender is released under the [MIT License](LICENSE).
-
-## Support
-
-If you encounter any issues or require assistance, please open an issue on the repository.
