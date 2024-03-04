@@ -16,6 +16,8 @@ https://tenderwad.azurewebsites.net
 - **Receiving Likes**: Users who receive likes can respond by accepting or rejecting them.
 - **Matches**: If two users mutually accept likes, a match is created, allowing them to connect further.
 - **Messaging**: Matched users can communicate with each other through messages, fostering a connection.
+- **Dependency Injection Utilization**: Utilization of Dependency Injection for decoupling dependencies and promoting testability and maintainability.
+- **Application Logging**: Implementation of logging for tracking application events, including logging levels, log message formatting, and log storage configuration.
 
 ## Getting Started
 
@@ -31,6 +33,7 @@ To get started with Tender, follow these steps:
 
 - APP: ASP.NET Core 7.0
 - DB: SQL Server
+- User Management: Identity Framework
 - Cloud Platform: Microsoft Azure
 - Version Control: Git/GitHub/GitHub Action
 - Email Server: Gmail
